@@ -64,7 +64,7 @@ export default function DownloadPage() {
   }
 
   const validateToken = async () => {
-    if (!token.trim()) return notify("Erro", "Por favor, insira um código de download", "destructive")
+    if (!token.trim()) return notify("Erro", "Por favor, insira um código de download válido", "destructive")
 
     setIsValidating(true)
     try {
