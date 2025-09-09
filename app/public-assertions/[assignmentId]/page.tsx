@@ -16,7 +16,7 @@ export default function OpenBadgePage({ params }: PageProps) {
     async function fetchBadge() {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/public/assertions/${assignmentId}/open-badge`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/public/assertions/${assignmentId}/open-badge`
         );
         if (!res.ok) {
           throw new Error("Erro ao buscar badge");

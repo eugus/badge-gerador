@@ -75,9 +75,9 @@ export default function AssignmentsTab() {
     try {
       setLoading(true)
       const [assignmentsRes, studentsRes, badgesRes] = await Promise.all([
-        fetch("http://localhost:8080/api/assignments"),
-        fetch("http://localhost:8080/api/students"),
-        fetch("http://localhost:8080/api/badges/active"),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/students`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/active`),
       ])
 
       if (assignmentsRes.ok && studentsRes.ok && badgesRes.ok) {
@@ -121,7 +121,7 @@ export default function AssignmentsTab() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/assignments", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +161,7 @@ export default function AssignmentsTab() {
 
   const handleResendEmail = async (assignmentId: number) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/assignments/${assignmentId}/resend-email`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments/${assignmentId}/resend-email`, {
         method: "POST",
       })
 

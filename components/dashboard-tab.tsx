@@ -30,9 +30,9 @@ export default function DashboardTab() {
 
       // Buscar dados das APIs
       const [studentsRes, badgesRes, assignmentsRes] = await Promise.all([
-        fetch("http://localhost:8080/api/students"),
-        fetch("http://localhost:8080/api/badges"),
-        fetch("http://localhost:8080/api/assignments"),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/students`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`),
       ])
 
       const students = await studentsRes.json()

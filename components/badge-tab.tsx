@@ -138,14 +138,14 @@ const BadgeCard = memo(
       if (!imagePath) return null
       if (imagePath.startsWith("http")) return imagePath
       const filename = imagePath.includes("/") ? imagePath.split("/").pop() : imagePath
-      return `http://localhost:8080/uploads/badges/${filename}`
+      return `${process.env.NEXT_PUBLIC_API_URL}/uploads/badges/${filename}`
     }, [])
 
     const getIssuerImageUrl = useCallback((imagePath: string) => {
       if (!imagePath) return null
       if (imagePath.startsWith("http")) return imagePath
       const filename = imagePath.includes("/") ? imagePath.split("/").pop() : imagePath
-      return `http://localhost:8080/uploads/issuers/${filename}`
+      return `${process.env.NEXT_PUBLIC_API_URL}/uploads/issuers/${filename}`
     }, [])
 
     const imageUrl = getImageUrl(badge.imagePath)
@@ -326,7 +326,7 @@ export default function BadgesTab() {
   const fetchBadges = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch("http://localhost:8080/api/badges")
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges`)
       if (response.ok) {
         const data = await response.json()
         setBadges(data)
@@ -403,8 +403,8 @@ export default function BadgesTab() {
         }
 
         const url = editingBadge
-          ? `http://localhost:8080/api/badges/${editingBadge.id}`
-          : "http://localhost:8080/api/badges"
+                  ? `${process.env.NEXT_PUBLIC_API_URL}/api/badges/${editingBadge.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/badges`
 
         const method = editingBadge ? "PUT" : "POST"
 
@@ -459,7 +459,7 @@ export default function BadgesTab() {
       if (!confirm("Tem certeza que deseja excluir este badge?")) return
 
       try {
-        const response = await fetch(`http://localhost:8080/api/badges/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/${id}`, {
           method: "DELETE",
         })
 

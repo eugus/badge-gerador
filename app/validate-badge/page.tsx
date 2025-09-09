@@ -14,12 +14,12 @@ export default function ValidateBadgePage() {
     setLoading(true)
     try {
       // 1️⃣ Buscar JSON do badge
-      const resBadge = await fetch(`http://localhost:8080/public/assertions/${badgeId}`)
+      const resBadge = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/assertions/${badgeId}`)
       if (!resBadge.ok) throw new Error("Badge não encontrado")
       const badgeJson = await resBadge.json()
 
       // 2️⃣ Enviar para validação interna
-      const resValidate = await fetch("http://localhost:8080/api/badges/validate", {
+      const resValidate = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ badgeJson: JSON.stringify(badgeJson), recipient })

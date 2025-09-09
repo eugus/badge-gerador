@@ -60,7 +60,7 @@ export default function DownloadPage() {
     if (!path) return null
     if (path.startsWith("http")) return path
     const filename = path.split("/").pop()
-    return `http://localhost:8080/uploads/${type}/${filename}`
+    return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${type}/${filename}`
   }
 
   const validateToken = async () => {
@@ -68,7 +68,7 @@ export default function DownloadPage() {
 
     setIsValidating(true)
     try {
-      const res = await fetch("http://localhost:8080/api/badges/validate-token", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/validate-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim() }),
@@ -96,7 +96,7 @@ export default function DownloadPage() {
     setIsDownloading(true)
 
     try {
-      const res = await fetch("http://localhost:8080/api/badges/download-by-token", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/download-by-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim() }),
@@ -164,7 +164,7 @@ export default function DownloadPage() {
       }
 
       // 1) Buscar JSON do Open Badge a partir do assignmentId
-      const resOpenBadge = await fetch(`http://localhost:8080/api/public/assertions/${assignmentId}/open-badge`)
+      const resOpenBadge = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/assertions/${assignmentId}/open-badge`)
       if (!resOpenBadge.ok) {
         const txt = await resOpenBadge.text()
         throw new Error(txt || "Falha ao buscar JSON do badge")
@@ -172,7 +172,7 @@ export default function DownloadPage() {
       const openBadgeJson = await resOpenBadge.json()
 
       // 2) Enviar para a rota de validação
-      const resValidate = await fetch("http://localhost:8080/api/badges/validate", {
+      const resValidate = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ badgeJson: openBadgeJson, recipient: recipientEmail.trim() })
