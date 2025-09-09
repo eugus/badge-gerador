@@ -188,7 +188,7 @@ export default function AssignmentsTab() {
   }
 
   const copyDownloadLink = (token: string) => {
-    const downloadUrl = `http://localhost:8080/api/badges/download/${token}`
+    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/badges/download/${token}`
     navigator.clipboard.writeText(downloadUrl)
     toast({
       title: "Sucesso",

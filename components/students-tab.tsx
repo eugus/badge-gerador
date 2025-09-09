@@ -76,8 +76,8 @@ export default function StudentsTab() {
 
     try {
       const url = editingStudent
-        ? `http://localhost:8080/api/students/${editingStudent.id}`
-        : "http://localhost:8080/api/students"
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/students/${editingStudent.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/students`
 
       const method = editingStudent ? "PUT" : "POST"
 
@@ -128,7 +128,7 @@ export default function StudentsTab() {
     if (!confirm("Tem certeza que deseja excluir este aluno?")) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/students/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/students/${id}`, {
         method: "DELETE",
       })
 
