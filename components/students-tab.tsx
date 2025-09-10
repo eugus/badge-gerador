@@ -50,6 +50,7 @@ export default function StudentsTab() {
     try {
       setLoading(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/students`)
+      console.log(response)
       if (response.ok) {
         const data = await response.json()
         setStudents(data)
