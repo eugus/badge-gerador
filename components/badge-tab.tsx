@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Award, Edit, Trash2, Upload, ImageIcon, Building2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import ImageGallerySelector from "@/components/image-gallery-selector"
 
 interface BadgeType {
   id: number
@@ -255,20 +256,20 @@ const BadgeCard = memo(
             <div className="mb-3 min-h-[2.5rem]">
               {badge.issuer && (
                 <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-<div className="w-10 h-6 flex-shrink-0">
-  {issuerImageUrl ? (
-    <OptimizedImage
-      src={issuerImageUrl}
-      alt={badge.issuer}
-      className="w-10 h-6 object-cover rounded"
-      fallback={<Building2 className="h-6 w-6 text-blue-600" />}
-      onLoad={() => handleImageLoad("Issuer", issuerImageUrl)}
-      onError={() => handleImageError("Issuer", issuerImageUrl)}
-    />
-  ) : (
-    <Building2 className="h-6 w-6 text-blue-600" />
-  )}
-</div>
+                  <div className="w-10 h-6 flex-shrink-0">
+                    {issuerImageUrl ? (
+                      <OptimizedImage
+                        src={issuerImageUrl}
+                        alt={badge.issuer}
+                        className="w-10 h-6 object-cover rounded"
+                        fallback={<Building2 className="h-6 w-6 text-blue-600" />}
+                        onLoad={() => handleImageLoad("Issuer", issuerImageUrl)}
+                        onError={() => handleImageError("Issuer", issuerImageUrl)}
+                      />
+                    ) : (
+                      <Building2 className="h-6 w-6 text-blue-600" />
+                    )}
+                  </div>
                   <span className="text-sm text-blue-800 font-medium truncate">{badge.issuer}</span>
                 </div>
               )}
@@ -321,6 +322,10 @@ export default function BadgesTab() {
   const [issuerImageFile, setIssuerImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [issuerImagePreview, setIssuerImagePreview] = useState<string | null>(null)
+  const [selectedBadgeImageFromGallery, setSelectedBadgeImageFromGallery] = useState<string | null>(null)
+  const [selectedIssuerImageFromGallery, setSelectedIssuerImageFromGallery] = useState<string | null>(null)
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null)
+  const [newIssuerImagePreview, setNewIssuerImagePreview] = useState<string | null>(null)
   const { toast } = useToast()
 
   const fetchBadges = useCallback(async () => {
@@ -387,33 +392,70 @@ export default function BadgesTab() {
     async (e: React.FormEvent) => {
       e.preventDefault()
 
+      console.log("🚀 ===== INICIANDO SUBMIT =====")
+      console.log("📝 Form data:", formData)
+      console.log("🖼️ Image file:", imageFile ? imageFile.name : "nenhum")
+      console.log("🏢 Issuer image file:", issuerImageFile ? issuerImageFile.name : "nenhum")
+      console.log("🎨 Selected badge image from gallery:", selectedBadgeImageFromGallery)
+      console.log("🏢 Selected issuer image from gallery:", selectedIssuerImageFromGallery)
+
       try {
         const formDataToSend = new FormData()
-        const badgeBlob = new Blob([JSON.stringify(formData)], {
+
+        // Incluir informações sobre imagens da galeria
+        const badgeData = {
+          ...formData,
+          useExistingBadgeImage: selectedBadgeImageFromGallery,
+          useExistingIssuerImage: selectedIssuerImageFromGallery,
+        }
+
+        console.log("📦 Badge data to send:", badgeData)
+
+        const badgeBlob = new Blob([JSON.stringify(badgeData)], {
           type: "application/json",
         })
         formDataToSend.append("badge", badgeBlob)
 
         if (imageFile) {
           formDataToSend.append("image", imageFile, imageFile.name)
+          console.log("✅ Badge image file added to FormData:", imageFile.name, imageFile.size, "bytes")
         }
 
         if (issuerImageFile) {
           formDataToSend.append("issuerImage", issuerImageFile, issuerImageFile.name)
+          console.log("✅ Issuer image file added to FormData:", issuerImageFile.name, issuerImageFile.size, "bytes")
+        }
+
+        // Log do FormData
+        console.log("📋 FormData entries:")
+        for (const [key, value] of formDataToSend.entries()) {
+          if (value instanceof File) {
+            console.log(`   ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`)
+          } else {
+            console.log(`   ${key}:`, value)
+          }
         }
 
         const url = editingBadge
-                  ? `${process.env.NEXT_PUBLIC_API_URL}/api/badges/${editingBadge.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/badges`
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/badges/${editingBadge.id}`
+          : `${process.env.NEXT_PUBLIC_API_URL}/api/badges`
 
         const method = editingBadge ? "PUT" : "POST"
+
+        console.log(`🌐 Sending ${method} request to:`, url)
 
         const response = await fetch(url, {
           method,
           body: formDataToSend,
         })
 
+        console.log("📡 Response status:", response.status)
+        console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()))
+
         if (response.ok) {
+          const responseData = await response.json()
+          console.log("✅ Success response:", responseData)
+
           toast({
             title: "Sucesso",
             description: editingBadge ? "Badge atualizado com sucesso!" : "Badge criado com sucesso!",
@@ -423,6 +465,7 @@ export default function BadgesTab() {
           setIsDialogOpen(false)
         } else {
           const errorText = await response.text()
+          console.error("❌ Error response:", errorText)
           toast({
             title: "Erro",
             description: errorText || "Erro ao salvar badge",
@@ -430,6 +473,7 @@ export default function BadgesTab() {
           })
         }
       } catch (error) {
+        console.error("💥 Submit error:", error)
         toast({
           title: "Erro",
           description: "Erro de conexão com o servidor",
@@ -437,7 +481,16 @@ export default function BadgesTab() {
         })
       }
     },
-    [formData, imageFile, issuerImageFile, editingBadge, toast, fetchBadges],
+    [
+      formData,
+      imageFile,
+      issuerImageFile,
+      selectedBadgeImageFromGallery,
+      selectedIssuerImageFromGallery,
+      editingBadge,
+      toast,
+      fetchBadges,
+    ],
   )
 
   const handleEdit = useCallback((badge: BadgeType) => {
@@ -451,6 +504,10 @@ export default function BadgesTab() {
     })
     setImagePreview(null)
     setIssuerImagePreview(null)
+    setSelectedBadgeImageFromGallery(badge.imagePath || null)
+    setSelectedIssuerImageFromGallery(badge.issuerImagePath || null)
+    setNewImagePreview(null)
+    setNewIssuerImagePreview(null)
     setIsDialogOpen(true)
   }, [])
 
@@ -500,6 +557,46 @@ export default function BadgesTab() {
     setIssuerImageFile(null)
     setImagePreview(null)
     setIssuerImagePreview(null)
+    setSelectedBadgeImageFromGallery(null)
+    setSelectedIssuerImageFromGallery(null)
+    setNewImagePreview(null)
+    setNewIssuerImagePreview(null)
+  }, [])
+
+  const handleBadgeFileSelect = useCallback((file: File | null) => {
+    console.log("🖼️ Badge file selected:", file ? file.name : "none")
+    setImageFile(file)
+    setSelectedBadgeImageFromGallery(null) // Limpar seleção da galeria
+
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setNewImagePreview(result)
+        console.log("✅ Badge preview generated")
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setNewImagePreview(null)
+    }
+  }, [])
+
+  const handleIssuerFileSelect = useCallback((file: File | null) => {
+    console.log("🏢 Issuer file selected:", file ? file.name : "none")
+    setIssuerImageFile(file)
+    setSelectedIssuerImageFromGallery(null) // Limpar seleção da galeria
+
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setNewIssuerImagePreview(result)
+        console.log("✅ Issuer preview generated")
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setNewIssuerImagePreview(null)
+    }
   }, [])
 
   return (
@@ -577,33 +674,53 @@ export default function BadgesTab() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="image">Imagem do Badge</Label>
-                    <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
-                    {imagePreview && (
+                    <ImageGallerySelector
+                      type="badges"
+                      selectedImage={selectedBadgeImageFromGallery}
+                      onImageSelect={setSelectedBadgeImageFromGallery}
+                      onFileSelect={handleBadgeFileSelect}
+                      label="Imagem do Badge"
+                      description="Escolha uma imagem da galeria ou envie uma nova"
+                    />
+                    {newImagePreview && (
                       <div className="mt-2">
-                        <img
-                          src={imagePreview || "/placeholder.svg"}
-                          alt="Preview Badge"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
+                        <Label className="text-sm font-medium text-green-600">Nova Imagem Selecionada:</Label>
+                        <div className="relative inline-block mt-1">
+                          <img
+                            src={newImagePreview || "/placeholder.svg"}
+                            alt="Preview da nova imagem"
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-green-200"
+                          />
+                          <Badge variant="default" className="absolute -bottom-2 left-0 text-xs bg-green-500">
+                            Novo Arquivo
+                          </Badge>
+                        </div>
                       </div>
                     )}
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="issuerImage" className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Logo do Emissor
-                    </Label>
-                    <Input id="issuerImage" type="file" accept="image/*" onChange={handleIssuerImageChange} />
-                    <p className="text-xs text-gray-500">Logo ou imagem da instituição emissora (opcional)</p>
-                    {issuerImagePreview && (
+                    <ImageGallerySelector
+                      type="issuers"
+                      selectedImage={selectedIssuerImageFromGallery}
+                      onImageSelect={setSelectedIssuerImageFromGallery}
+                      onFileSelect={handleIssuerFileSelect}
+                      label="Logo do Emissor"
+                      description="Logo ou imagem da instituição emissora (opcional)"
+                    />
+                    {newIssuerImagePreview && (
                       <div className="mt-2">
-                        <img
-                          src={issuerImagePreview || "/placeholder.svg"}
-                          alt="Preview Emissor"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
+                        <Label className="text-sm font-medium text-green-600">Nova Logo Selecionada:</Label>
+                        <div className="relative inline-block mt-1">
+                          <img
+                            src={newIssuerImagePreview || "/placeholder.svg"}
+                            alt="Preview da nova logo"
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-green-200"
+                          />
+                          <Badge variant="default" className="absolute -bottom-2 left-0 text-xs bg-green-500">
+                            Novo Arquivo
+                          </Badge>
+                        </div>
                       </div>
                     )}
                   </div>
