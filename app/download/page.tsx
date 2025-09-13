@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
+import { DropdownMenuArrow } from "@radix-ui/react-dropdown-menu"
 
 interface BadgeInfo {
   badgeName: string
@@ -218,18 +219,34 @@ export default function DownloadPage() {
           <div className="flex items-center gap-2">
             {/* Menu de três pontos */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={exportToJson} disabled={!badgeInfo} className="cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Exportar JSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button
+      className="bg-white border border-gray-300 shadow-sm w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+    >
+      <MoreVertical className="h-4 w-4 text-gray-700" />
+    </Button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent
+  align="center"        // centraliza horizontalmente em relação ao trigger
+  side="top"
+  sideOffset={10}       // distância vertical do trigger
+  className="bg-white border border-gray-100 rounded-md shadow-md p-0 overflow-visible" // ⬅️ overflow-visible evita corte da seta
+>
+  <DropdownMenuArrow
+    className="fill-white stroke-gray-300"  // ⬅️ mesma cor da borda do menu
+    offset={0}  // ⬅️ seta no meio do trigger
+  />
+
+    <DropdownMenuItem
+      onClick={exportToJson}
+      disabled={!badgeInfo}
+      className="px-4 py-2 text-sm text-gray-700 cursor-pointer data-[highlighted]:bg-blue-600 data-[highlighted]:text-white"
+    >
+      Export JSON
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
             <Link href="/">
               <Button variant="outline" size="sm">
@@ -241,119 +258,129 @@ export default function DownloadPage() {
         </div>
       </div>
 
-      {/* Conteúdo */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl grid gap-8 lg:grid-cols-2">
-        {/* Form */}
-        <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5" /> Inserir Código
-            </CardTitle>
-            <CardDescription className="text-blue-100">Digite o código que você recebeu por email</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="token">Código de Download</Label>
-              <div className="relative">
-                <Input
-                  id="token"
-                  type="text"
-                  placeholder="550e8400-e29b..."
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && validateToken()}
-                  className="font-mono text-sm pr-10"
-                />
-                {token && (
+<div className="flex flex-col lg:flex-row gap-8 lg:gap-10 px-4 sm:px-8 py-12">
+
+  {/* Form - metade esquerda no desktop */}
+  <Card className="w-full lg:w-1/2 min-h-[600px] shadow-lg">
+    <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg p-8 sm:p-12">
+      <CardTitle className="flex items-center gap-5 text-2xl sm:text-3xl">
+        <Key className="h-6 w-6 sm:h-8 sm:w-8" /> Inserir Código
+      </CardTitle>
+      <CardDescription className="text-blue-100 text-base sm:text-lg">
+        Digite o código que você recebeu por email
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="p-8 sm:p-12 space-y-6 sm:space-y-8">
+      <div className="space-y-4 sm:space-y-5">
+        <Label htmlFor="token" className="text-base sm:text-lg font-medium">
+          Código de Download
+        </Label>
+        <div className="relative">
+          <Input
+            id="token"
+            type="text"
+            placeholder="550e8400-e29b..."
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && validateToken()}
+            className="font-mono text-lg sm:text-xl pr-14 sm:pr-16"
+          />
+          {token && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-3 top-1 h-12 w-12 sm:h-14 sm:w-14 p-0"
+              onClick={copyToClipboard}
+            >
+              <Copy className="h-6 w-6 sm:h-7 sm:w-7" />
+            </Button>
+          )}
+        </div>
+        <p className="text-sm sm:text-base text-gray-500">
+          Cole o código UUID que você recebeu por email
+        </p>
+      </div>
+      <div className="flex gap-4 sm:gap-6">
+        <Button
+          onClick={validateToken}
+          disabled={isValidating || !token.trim()}
+          className="flex-1 py-4 sm:py-5 text-lg sm:text-xl"
+        >
+          {isValidating ? (
+            <>
+              <Clock className="h-6 w-6 sm:h-7 sm:w-7 mr-4 animate-spin" />
+              Validando...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 mr-4" />
+              Validar Código
+            </>
+          )}
+        </Button>
+        <Button variant="outline" onClick={resetForm} disabled={isValidating} className="py-4 sm:py-5 text-lg sm:text-xl">
+          Limpar
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+
+  {/* Badge Info - metade direita no desktop */}
+  <Card className="w-full lg:w-1/2 min-h-[600px] shadow-lg">
+    <CardHeader className="p-6 sm:p-8">
+      <CardTitle className="flex items-center gap-4 text-xl sm:text-2xl">
+        <Award className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500" /> Informações
+      </CardTitle>
+      <CardDescription className="text-gray-700 text-base sm:text-lg">
+        {badgeInfo ? "Detalhes do badge" : "Valide o código para ver as informações"}
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="p-8 sm:p-10">
+      {!badgeInfo ? (
+        <div className="text-center py-16 sm:py-20 text-gray-400">
+          <AlertCircle className="h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-6" />
+          <p className="text-lg sm:text-xl">Nenhum código validado</p>
+        </div>
+      ) : (
+        <div className="space-y-6 sm:space-y-8">
+          <div className="p-8 sm:p-10 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border relative overflow-hidden">
+            {badgeInfo.badgeImagePath && (
+              <img
+                src={buildUrl(badgeInfo.badgeImagePath, "badges") ?? "/placeholder.svg"}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-10"
+              />
+            )}
+            <div className="relative z-10">
+              <h3 className="font-bold text-3xl sm:text-4xl mb-4 sm:mb-5">{badgeInfo.badgeName}</h3>
+              {badgeInfo.badgeCategory && (
+                <Badge variant="secondary" className="text-lg sm:text-xl">{badgeInfo.badgeCategory}</Badge>
+              )}
+              <p className="text-gray-700 text-lg sm:text-lg">{badgeInfo.badgeDescription}</p>
+              {isValidToken && (
+                <div className="flex justify-center mt-6 sm:mt-8">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1 h-8 w-8 p-0"
-                    onClick={copyToClipboard}
+                    onClick={downloadBadge}
+                    disabled={isDownloading}
+                    size="lg"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-5 sm:py-6 px-8 sm:px-10 text-xl sm:text-2xl"
                   >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">Cole o código UUID que você recebeu por email</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button onClick={validateToken} disabled={isValidating || !token.trim()} className="flex-1">
-                {isValidating ? (
-                  <>
-                    <Clock className="h-4 w-4 mr-2 animate-spin" />
-                    Validando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Validar Código
-                  </>
-                )}
-              </Button>
-              <Button variant="outline" onClick={resetForm} disabled={isValidating}>
-                Limpar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Badge Info */}
-        <Card className="shadow-lg h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-yellow-500" /> Informações
-            </CardTitle>
-            <CardDescription>
-              {badgeInfo ? "Detalhes do badge" : "Valide o código para ver as informações"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!badgeInfo ? (
-              <div className="text-center py-12 text-gray-400">
-                <AlertCircle className="h-16 w-16 mx-auto mb-4" />
-                <p>Nenhum código validado</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Nome/descrição */}
-                <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border relative overflow-hidden">
-                  {badgeInfo.badgeImagePath && (
-                    <img
-                      src={buildUrl(badgeInfo.badgeImagePath, "badges") ?? "/placeholder.svg"}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover opacity-10"
-                    />
-                  )}
-                  <div className="relative z-10">
-                    <h3 className="font-bold text-2xl mb-3">{badgeInfo.badgeName}</h3>
-                    {badgeInfo.badgeCategory && <Badge variant="secondary">{badgeInfo.badgeCategory}</Badge>}
-                    <p className="text-gray-700">{badgeInfo.badgeDescription}</p>
-                    {isValidToken && (
-                      <div className="flex justify-center mt-4">
-                        <Button
-                          onClick={downloadBadge}
-                          disabled={isDownloading}
-                          size="lg"
-                          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                        >
-                          {isDownloading ? (
-                            <>
-                              <Clock className="h-5 w-5 mr-2 animate-spin" />
-                              Baixando...
-                            </>
-                          ) : (
-                            <>
-                              <Download className="h-5 w-5 mr-2" />
-                              Baixar Badge
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                    {isDownloading ? (
+                      <>
+                        <Clock className="h-7 w-7 sm:h-8 sm:w-8 mr-4 animate-spin" />
+                        Baixando...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-7 w-7 sm:h-8 sm:w-8 mr-4" />
+                        Baixar Badge
+                      </>
                     )}
-                  </div>
+                  </Button>
                 </div>
+              )}
+            </div>
+          </div>
 
                 {/* Emissor */}
                 {badgeInfo.issuer && (
