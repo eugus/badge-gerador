@@ -399,12 +399,20 @@ const exportToJson = () => {
                 )}
 
                 {/* Outros detalhes */}
-                <div className="space-y-3">
+               <div className="space-y-3">
+                <div className="hover:text-blue-600 cursor-pointer">
                   <Detail icon={<User />} label="Conquistado por" value={badgeInfo.studentName} />
-                  <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
-                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} /> 
                 </div>
 
+                <div className="hover:text-[#8A2BE2] cursor-pointer">
+                  <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
+                </div>
+
+                <div className="hover:text-[#8A2BE2] cursor-pointer">
+                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} />
+                </div>
+
+               </div>
                 {/* Status */}
                 <div
                   className={`p-4 rounded-xl border ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "bg-red-50" : "bg-green-50"}`}
