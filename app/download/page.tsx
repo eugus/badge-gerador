@@ -432,7 +432,7 @@ function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; 
   )
 }
 function setJsonPreview(jsonString: string) {
-  throw new Error("Function not implemented.")
+  throw new Error("Function not implemented.sacana")
 }
 
 function setOpenJsonModal(arg0: boolean) {
