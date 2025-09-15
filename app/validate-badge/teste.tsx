@@ -187,7 +187,7 @@ const exportToJson = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      
+      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ const exportToJson = () => {
           </div>
 
           <div className="flex items-center gap-2">
-           
+            {/* Menu de três pontos */}
             <DropdownMenu>
   <DropdownMenuTrigger asChild>
     <Button
@@ -400,7 +400,7 @@ const exportToJson = () => {
                 <div className="space-y-3">
                   <Detail icon={<User />} label="Conquistado por" value={badgeInfo.studentName} />
                   <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
-                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} /> 
+                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} />
                 </div>
 
                 {/* Status */}
