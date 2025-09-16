@@ -273,14 +273,15 @@ const exportToJson = () => {
             className="font-mono text-lg sm:text-xl pr-14 sm:pr-16"
           />
           {token && (
-            <Button
+           <Button
               variant="ghost"
               size="sm"
-              className="absolute right-3 top-1 h-12 w-12 sm:h-14 sm:w-14 p-0"
+              className="absolute right-3 top-1 h-8 w-8 sm:h-8 sm:w-8 p-0 bg-white border border-gray-200 hover:bg-gray-100"
               onClick={copyToClipboard}
             >
-              <Copy className="h-6 w-6 sm:h-7 sm:w-7" />
-            </Button>
+              <Copy className="h-6 w-6 sm:h-7 sm:w-7 " />
+           </Button>
+
           )}
         </div>
         <p className="text-sm sm:text-base text-gray-500">
@@ -291,7 +292,8 @@ const exportToJson = () => {
         <Button
           onClick={validateToken}
           disabled={isValidating || !token.trim()}
-          className="flex-1 py-4 sm:py-5 text-lg sm:text-xl"
+          className="flex-1 py-4 sm:py-5 text-lg sm:text-xl
+          bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
         >
           {isValidating ? (
             <>
@@ -397,12 +399,20 @@ const exportToJson = () => {
                 )}
 
                 {/* Outros detalhes */}
-                <div className="space-y-3">
+               <div className="space-y-3">
+                <div className="hover:text-blue-600 cursor-pointer">
                   <Detail icon={<User />} label="Conquistado por" value={badgeInfo.studentName} />
-                  <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
-                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} /> 
                 </div>
 
+                <div className="hover:text-[#8A2BE2] cursor-pointer">
+                  <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
+                </div>
+
+                <div className="hover:text-[#8A2BE2] cursor-pointer">
+                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} />
+                </div>
+
+               </div>
                 {/* Status */}
                 <div
                   className={`p-4 rounded-xl border ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "bg-red-50" : "bg-green-50"}`}
