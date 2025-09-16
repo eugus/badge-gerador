@@ -1,392 +1,236 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+// Importações de UI e ícones (mesmas do original)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Send, Mail, Award, User, Download, Copy, Clock } from "lucide-react"
+import { Plus, Send, Mail, Award, Download, Copy, Clock, Users, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-interface Student {
-  id: number
-  name: string
-  email: string
-}
-
-interface BadgeType {
-  id: number
-  name: string
-  description: string
-  category: string
-  isActive: boolean
-}
-
+// --- Tipos e API (poderiam ser arquivos separados) ---
+interface Student { course: string; name: string; email: string }
+interface BadgeType { id: number; name: string; description: string; category: string }
 interface Assignment {
-  id: number
-  studentId: number
-  badgeId: number
-  studentName: string
-  studentEmail: string
-  badgeName: string
-  badgeDescription: string
-  achievementReason: string
-  emailSent?: boolean
-  emailSentAt?: string
-  downloadToken?: string
-  downloadCount?: number
-  tokenExpiresAt?: string
+  id: number; studentName: string; studentEmail: string; badgeName: string; badgeDescription: string;
+  achievementReason: string; emailSent?: boolean; emailSentAt?: string; downloadToken?: string;
+  downloadCount?: number; tokenExpiresAt?: string;
 }
 
-export default function AssignmentsTab() {
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [students, setStudents] = useState<Student[]>([])
-  const [badges, setBadges] = useState<BadgeType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    studentId: "",
-    badgeId: "",
-    achievementReason: "",
-    sendEmail: true,
-  })
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const api = {
+  get: (path: string) => fetch(`${API_BASE_URL}${path}`),
+  post: (path: string, body?: any) => fetch(`${API_BASE_URL}${path}`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  }),
+}
+
+// --- Componente: Diálogo para Nova Atribuição ---
+function NewAssignmentDialog({ badges, onAssignmentCreated }: {
+  badges: BadgeType[],
+  onAssignmentCreated: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [allStudents, setAllStudents] = useState<Student[]>([])
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [formData, setFormData] = useState({ badgeId: "", achievementReason: "", sendEmail: true })
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+  // ** A LÓGICA ORIGINAL DE BUSCA DE ALUNOS FOI MANTIDA AQUI **
+  const loadAllStudents = useCallback(async () => {
+    if (allStudents.length > 0) return
+    setLoading(true)
     try {
-      setLoading(true)
-      const [assignmentsRes, studentsRes, badgesRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/students`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/badges/active`),
-      ])
+      const firstPageRes = await api.get("/api/studentsRM/paged?page=0&size=1")
+      if (!firstPageRes.ok) throw new Error("Erro ao buscar info dos alunos")
+      const pageInfo = await firstPageRes.json()
+      const totalElements = pageInfo.totalElements
 
-      if (assignmentsRes.ok && studentsRes.ok && badgesRes.ok) {
-        const [assignmentsData, studentsData, badgesData] = await Promise.all([
-          assignmentsRes.json(),
-          studentsRes.json(),
-          badgesRes.json(),
-        ])
-
-        setAssignments(assignmentsData)
-        setStudents(studentsData)
-        setBadges(badgesData)
-      } else {
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar dados",
-          variant: "destructive",
-        })
+      if (totalElements > 0) {
+        const allStudentsRes = await api.get(`/api/studentsRM/paged?page=0&size=${totalElements}&sort=name,asc`)
+        if (!allStudentsRes.ok) throw new Error("Erro ao carregar lista completa de alunos")
+        const allStudentsData = await allStudentsRes.json()
+        const normalized = allStudentsData.content.map((s: any) => ({
+          name: s.NAME ?? "", email: s.EMAIL ?? "", course: s.COURSE ?? ""
+        }))
+        setAllStudents(normalized)
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro de conexão com o servidor",
-        variant: "destructive",
-      })
+      toast({ title: "Erro", description: "Falha ao carregar a lista de alunos.", variant: "destructive" })
     } finally {
       setLoading(false)
     }
+  }, [allStudents.length, toast])
+
+  const resetAndClose = () => {
+    setFormData({ badgeId: "", achievementReason: "", sendEmail: true })
+    setSelectedEmails([]); setSearchTerm(""); setIsOpen(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!formData.studentId || !formData.badgeId) {
-      toast({
-        title: "Erro",
-        description: "Selecione um aluno e um badge",
-        variant: "destructive",
-      })
-      return
+    if (selectedEmails.length === 0 || !formData.badgeId) {
+      toast({ title: "Erro", description: "Selecione alunos e um badge.", variant: "destructive" }); return
     }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId: Number.parseInt(formData.studentId),
-          badgeId: Number.parseInt(formData.badgeId),
-          achievementReason: formData.achievementReason,
-          sendEmail: formData.sendEmail,
-        }),
-      })
-
-      if (response.ok) {
-        toast({
-          title: "Sucesso",
-          description: "Badge atribuído com sucesso!",
-        })
-        fetchData()
-        resetForm()
-        setIsDialogOpen(false)
-      } else {
-        const errorText = await response.text()
-        toast({
-          title: "Erro",
-          description: errorText || "Erro ao atribuir badge",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro de conexão com o servidor",
-        variant: "destructive",
-      })
-    }
+    const results = await Promise.all(selectedEmails.map(email => api.post("/api/assignments", {
+      studentEmail: email, badgeId: Number.parseInt(formData.badgeId),
+      achievementReason: formData.achievementReason, sendEmail: formData.sendEmail,
+    })))
+    const successes = results.filter(r => r.ok).length
+    toast({ title: "Sucesso", description: `${successes} badge(s) atribuído(s)!` })
+    if (successes > 0) { onAssignmentCreated(); resetAndClose() }
   }
 
-  const handleResendEmail = async (assignmentId: number) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments/${assignmentId}/resend-email`, {
-        method: "POST",
-      })
+  const filteredStudents = allStudents.filter(s =>
+    (s.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.email ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-      if (response.ok) {
-        toast({
-          title: "Sucesso",
-          description: "Email reenviado com sucesso!",
-        })
-        fetchData()
-      } else {
-        toast({
-          title: "Erro",
-          description: "Erro ao reenviar email",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro de conexão com o servidor",
-        variant: "destructive",
-      })
-    }
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (open) loadAllStudents() }}>
+      <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nova Atribuição</Button></DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogHeader><DialogTitle>Atribuir Badge em Lote</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="grid gap-6 py-2">
+          <div className="grid gap-4">
+            <Label className="text-base font-medium">Selecionar Alunos ({selectedEmails.length})</Label>
+            <Input placeholder="Buscar por nome ou email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+<ScrollArea className="h-64 border rounded-lg p-2">
+  {loading ? (
+    <p className="text-center">Carregando alunos...</p>
+  ) : filteredStudents.map(s => (
+    <div key={s.email} className="flex flex-col my-1">
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id={s.email}
+          checked={selectedEmails.includes(s.email)}
+          onCheckedChange={() =>
+            setSelectedEmails(prev =>
+              prev.includes(s.email)
+                ? prev.filter(e => e !== s.email)
+                : [...prev, s.email]
+            )
+          }
+        />
+        <Label htmlFor={s.email} className="font-medium cursor-pointer">
+          {s.name}
+        </Label>
+      </div>
+      <div className="ml-7 text-sm text-gray-500 flex gap-1 items-center">
+        <span>{s.course}</span>
+        <span>•</span>
+        <span>{s.email}</span>
+      </div>
+    </div>
+  ))}
+</ScrollArea>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="badge">Badge</Label>
+              <Select value={formData.badgeId} onValueChange={v => setFormData(f => ({ ...f, badgeId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione um badge" /></SelectTrigger>
+                <SelectContent>{badges.map(b => <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end pb-2 space-x-2">
+              <Switch id="sendEmail" checked={formData.sendEmail} onCheckedChange={c => setFormData(f => ({ ...f, sendEmail: c }))} />
+              <Label htmlFor="sendEmail">Enviar notificação por email</Label>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="reason">Motivo da Conquista</Label>
+            <Textarea id="reason" value={formData.achievementReason} onChange={e => setFormData(f => ({ ...f, achievementReason: e.target.value }))} placeholder="Opcional: Descreva o motivo..." />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={resetAndClose}>Cancelar</Button>
+            <Button type="submit" disabled={selectedEmails.length === 0 || !formData.badgeId}><Award className="h-4 w-4 mr-2" />Atribuir para {selectedEmails.length} aluno(s)</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// --- Componente Principal ---
+export default function AssignmentsTab() {
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [badges, setBadges] = useState<BadgeType[]>([])
+  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  const fetchInitialData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [assignmentsRes, badgesRes] = await Promise.all([api.get("/api/assignments"), api.get("/api/badges/active")])
+      if (!assignmentsRes.ok || !badgesRes.ok) throw new Error("Falha ao buscar dados")
+      const [assignmentsData, badgesData] = await Promise.all([assignmentsRes.json(), badgesRes.json()])
+      setAssignments(assignmentsData || [])
+      setBadges(badgesData || [])
+    } catch (error) { toast({ title: "Erro", description: "Não foi possível carregar os dados.", variant: "destructive" })
+    } finally { setLoading(false) }
+  }, [toast])
+
+  useEffect(() => { fetchInitialData() }, [fetchInitialData])
+
+  const handleResendEmail = async (assignmentId: number) => {
+    const res = await api.post(`/api/assignments/${assignmentId}/resend-email`)
+    toast({ title: res.ok ? "Sucesso" : "Erro", description: `Email ${res.ok ? "reenviado" : "não enviado"}.` })
+    if (res.ok) fetchInitialData()
   }
 
   const copyDownloadLink = (token: string) => {
-    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/badges/download/${token}`
-    navigator.clipboard.writeText(downloadUrl)
-    toast({
-      title: "Sucesso",
-      description: "Link de download copiado para a área de transferência!",
-    })
-  }
-
-  const resetForm = () => {
-    setFormData({
-      studentId: "",
-      badgeId: "",
-      achievementReason: "",
-      sendEmail: true,
-    })
-  }
-
-  const isTokenExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date()
+    navigator.clipboard.writeText(`${API_BASE_URL}/api/badges/download/${token}`)
+    toast({ title: "Sucesso", description: "Link de download copiado!" })
   }
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5" />
-              Atribuir Badges
-            </CardTitle>
-            <CardDescription>Atribua badges aos alunos e gerencie as atribuições</CardDescription>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Atribuição
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Atribuir Badge</DialogTitle>
-                <DialogDescription>Selecione um aluno e um badge para fazer a atribuição</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="student">Aluno</Label>
-                    <Select
-                      value={formData.studentId}
-                      onValueChange={(value) => setFormData({ ...formData, studentId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um aluno" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {students.map((student) => (
-                          <SelectItem key={student.id} value={student.id.toString()}>
-                            {student.name} ({student.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="badge">Badge</Label>
-                    <Select
-                      value={formData.badgeId}
-                      onValueChange={(value) => setFormData({ ...formData, badgeId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um badge" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {badges.map((badge) => (
-                          <SelectItem key={badge.id} value={badge.id.toString()}>
-                            {badge.name} {badge.category && `(${badge.category})`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reason">Motivo da Conquista</Label>
-                    <Textarea
-                      id="reason"
-                      value={formData.achievementReason}
-                      onChange={(e) => setFormData({ ...formData, achievementReason: e.target.value })}
-                      placeholder="Descreva o motivo pelo qual o aluno conquistou este badge..."
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="sendEmail"
-                      checked={formData.sendEmail}
-                      onCheckedChange={(checked) => setFormData({ ...formData, sendEmail: checked })}
-                    />
-                    <Label htmlFor="sendEmail">Enviar email de notificação</Label>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Atribuir Badge</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2"><Send />Atribuir Badges</CardTitle>
+          <CardDescription>Atribua e gerencie os badges dos alunos.</CardDescription>
         </div>
+        <NewAssignmentDialog badges={badges} onAssignmentCreated={fetchInitialData} />
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="text-center py-8">Carregando...</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>Badge</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Downloads</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assignments.map((assignment) => (
-                <TableRow key={assignment.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <div className="font-medium">{assignment.studentName}</div>
-                        <div className="text-sm text-gray-500">{assignment.studentEmail}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Award className="h-4 w-4 text-yellow-500" />
-                      <div>
-                        <div className="font-medium">{assignment.badgeName}</div>
-                        <div className="text-sm text-gray-500">{assignment.badgeDescription}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="truncate" title={assignment.achievementReason}>
-                      {assignment.achievementReason || "Sem motivo especificado"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={assignment.emailSent ? "default" : "secondary"}>
-                      {assignment.emailSent ? "Enviado" : "Não enviado"}
-                    </Badge>
-                    {assignment.emailSent && assignment.emailSentAt && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(assignment.emailSentAt).toLocaleString("pt-BR")}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Download className="h-3 w-3" />
-                        {assignment.downloadCount || 0}
-                      </Badge>
-                      {assignment.tokenExpiresAt && (
-                        <Badge
-                          variant={isTokenExpired(assignment.tokenExpiresAt) ? "destructive" : "secondary"}
-                          className="flex items-center gap-1"
-                        >
-                          <Clock className="h-3 w-3" />
-                          {isTokenExpired(assignment.tokenExpiresAt) ? "Expirado" : "Válido"}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handleResendEmail(assignment.id)}>
-                        <Mail className="h-4 w-4 mr-1" />
-                        {assignment.emailSent ? "Reenviar" : "Enviar"}
-                      </Button>
-                      {assignment.downloadToken && (
-                        <Button variant="outline" size="sm" onClick={() => copyDownloadLink(assignment.downloadToken!)}>
-                          <Copy className="h-4 w-4 mr-1" />
-                          Link
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {!loading && assignments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">Nenhuma atribuição encontrada</div>
+        {loading ? <p className="text-center py-8">Carregando atribuições...</p> : (
+            assignments.length > 0 ? (
+                <Table>
+                    <TableHeader><TableRow><TableCell>Aluno</TableCell><TableCell>Badge</TableCell><TableCell>Status</TableCell><TableCell className="text-right">Ações</TableCell></TableRow></TableHeader>
+                    <TableBody>
+                        {assignments.map(a => (
+                            <TableRow key={a.id}>
+                                <TableCell><div className="font-medium">{a.studentName}</div><div className="text-sm text-muted-foreground">{a.studentEmail}</div></TableCell>
+                                <TableCell><div className="font-medium">{a.badgeName}</div></TableCell>
+                                <TableCell><Badge variant={a.emailSent ? "default" : "secondary"}>{a.emailSent ? "Email Enviado" : "Pendente"}</Badge></TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="outline" size="sm" onClick={() => handleResendEmail(a.id)} className="mr-2"><Mail className="h-4 w-4 mr-1" />Reenviar</Button>
+                                    {a.downloadToken && <Button variant="outline" size="sm" onClick={() => copyDownloadLink(a.downloadToken!)}><Copy className="h-4 w-4 mr-1" />Link</Button>}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            ) : (
+                <div className="text-center py-10">
+                    <h3 className="text-lg font-medium">Nenhuma atribuição encontrada</h3>
+                    <p className="text-sm text-muted-foreground">Clique em "Nova Atribuição" para começar.</p>
+                </div>
+            )
         )}
       </CardContent>
     </Card>
