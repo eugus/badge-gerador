@@ -289,11 +289,13 @@ const exportToJson = () => {
         </p>
       </div>
       <div className="flex gap-4 sm:gap-6">
-        <Button
+       <Button
           onClick={validateToken}
           disabled={isValidating || !token.trim()}
           className="flex-1 py-4 sm:py-5 text-lg sm:text-xl
-          bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+          bg-gradient-to-r from-blue-600 to-indigo-600 text-white 
+          hover:from-blue-700 hover:to-indigo-700
+          transition-transform duration-300 ease-in-out hover:scale-105"
         >
           {isValidating ? (
             <>
@@ -307,9 +309,16 @@ const exportToJson = () => {
             </>
           )}
         </Button>
-        <Button variant="outline" onClick={resetForm} disabled={isValidating} className="py-4 sm:py-5 text-lg sm:text-xl ">
+
+       <Button
+          variant="outline"
+          onClick={resetForm}
+          disabled={isValidating}
+          className="py-4 sm:py-5 text-lg sm:text-xl transition-transform duration-200 hover:scale-105"
+        >
           Limpar
         </Button>
+
       </div>
     </CardContent>
   </Card>
@@ -349,23 +358,27 @@ const exportToJson = () => {
               {isValidToken && (
                 <div className="flex justify-center mt-6 sm:mt-8">
                   <Button
-                    onClick={downloadBadge}
-                    disabled={isDownloading}
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-5 sm:py-6 px-8 sm:px-10 text-xl sm:text-2xl"
-                  >
-                    {isDownloading ? (
-                      <>
-                        <Clock className="h-7 w-7 sm:h-8 sm:w-8 mr-4 animate-spin" />
-                        Baixando...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-7 w-7 sm:h-8 sm:w-8 mr-4" />
-                        Baixar Badge
-                      </>
-                    )}
+                      onClick={downloadBadge}
+                      disabled={isDownloading}
+                      size="lg"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white 
+                      py-5 sm:py-6 px-8 sm:px-10 text-xl sm:text-2xl
+                      hover:from-blue-700 hover:to-indigo-700
+                      transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
+                    >
+                      {isDownloading ? (
+                        <>
+                          <Clock className="h-7 w-7 sm:h-8 sm:w-8 mr-4 animate-spin" />
+                          Baixando...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-7 w-7 sm:h-8 sm:w-8 mr-4" />
+                          Baixar Badge
+                        </>
+                      )}
                   </Button>
+
                 </div>
               )}
             </div>
@@ -373,46 +386,41 @@ const exportToJson = () => {
 
                 {/* Emissor */}
                 {badgeInfo.issuer && (
-                  <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building2 className="h-5 w-5 text-blue-600" />
-                      Emitido por
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={buildUrl(badgeInfo.issuerImagePath, "issuers") ?? "/placeholder.svg"}
-                        alt={badgeInfo.issuer}
-                        className="w-26 h-16 object-cover rounded-xl"
-                      />
-                      <h4 className="text-blue-800 font-bold">
-                        <a
-                          href="https://incode-tech-school.com.br/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline"
+                  
+                    <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border
+                      transition-transform duration-300 ease-in-out hover:scale-105"
                         >
-                          {badgeInfo.issuer}
-                        </a>
-                      </h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                        Emitido por
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={buildUrl(badgeInfo.issuerImagePath, "issuers") ?? "/placeholder.svg"}
+                          alt={badgeInfo.issuer}
+                          className="w-26 h-16 object-cover rounded-xl"
+                        />
+                        <h4 className="text-blue-800 font-bold">
+                          <a
+                            href="https://incode-tech-school.com.br/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          >
+                            {badgeInfo.issuer}
+                          </a>
+                        </h4>
+                      </div>
                     </div>
-                  </div>
+
                 )}
 
                 {/* Outros detalhes */}
                <div className="space-y-3">
-                <div className="hover:text-blue-600 cursor-pointer">
                   <Detail icon={<User />} label="Conquistado por" value={badgeInfo.studentName} />
-                </div>
-
-                <div className="hover:text-[#8A2BE2] cursor-pointer">
                   <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
-                </div>
-
-                <div className="hover:text-[#8A2BE2] cursor-pointer">
                   <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} />
                 </div>
-
-               </div>
                 {/* Status */}
                 <div
                   className={`p-4 rounded-xl border ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "bg-red-50" : "bg-green-50"}`}
@@ -432,7 +440,7 @@ const exportToJson = () => {
 
 function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg houver:scale-105 transition-transform duration-500">
       <div className="text-gray-500">{icon}</div>
       <div>
         <p className="font-medium">{label}</p>
