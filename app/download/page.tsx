@@ -440,13 +440,17 @@ const exportToJson = () => {
 
 function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg houver:scale-105 transition-transform duration-500">
-      <div className="text-gray-500">{icon}</div>
-      <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-gray-900">{value}</p>
-      </div>
+   <div
+    className="flex items-center gap-4 p-3 bg-purple-50 rounded-lg
+    transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
+  >
+    <div className="text-gray-500">{icon}</div>
+    <div>
+      <p className="font-medium">{label}</p>
+      <p className="text-gray-900">{value}</p>
     </div>
+  </div>
+
   )
 }
 function setJsonPreview(jsonString: string) {
