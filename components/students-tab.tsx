@@ -72,6 +72,7 @@ export default function StudentsTab() {
       }))
 
       setPageInfo({ ...data, content: normalizedContent })
+      
     } catch (error) {
       console.error("❌ Erro ao buscar alunos:", error)
       toast({
@@ -170,6 +171,8 @@ export default function StudentsTab() {
     setPageSize(Number(newSize))
     setCurrentPage(0)
   }
+
+  console.log("🔍 Termo de busca:", pageInfo)
 
   const filteredStudents =
     pageInfo?.content.filter(
