@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import {
@@ -18,16 +17,17 @@ import {
   Building2,
   MoreVertical,
   FileText,
+  Sparkles,
+  Shield,
+  ExternalLink,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { SetStateAction } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
-import { DropdownMenuArrow } from "@radix-ui/react-dropdown-menu"
 
 interface BadgeInfo {
   badgeName: string
@@ -44,7 +44,6 @@ interface BadgeInfo {
   assignmentId: number
 }
 
-
 interface ValidationResponse {
   valid: boolean
   message: string
@@ -57,18 +56,19 @@ export default function DownloadPage() {
   const [isValidating, setIsValidating] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isValidToken, setIsValidToken] = useState(false)
-  const [openJsonModal, setOpenJsonModal] = useState(false)
-  const [jsonPreview, setJsonPreview] = useState("")
 
-  const { toast } = useToast();
+  const { toast } = useToast()
   const notify = (title: string, description: string, variant: "default" | "destructive" = "default") =>
-    toast({ title, description, variant });
+    toast({ title, description, variant })
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleString("pt-BR", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    });
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
 
   const isTokenExpired = (expiresAt: string) => new Date(expiresAt) < new Date()
 
@@ -118,33 +118,32 @@ export default function DownloadPage() {
         body: JSON.stringify({ token: token.trim() }),
       })
 
-       if (!res.ok) return notify("Erro no Download", await res.text(), "destructive");
+      if (!res.ok) return notify("Erro no Download", await res.text(), "destructive")
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `badge.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `badge.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
 
-      notify(
-        "🎉 Download Concluído!",
-        `Badge "${badgeInfo ? badgeInfo.badgeName : ""}" baixado!`
-      );
+      notify("🎉 Download Concluído!", `Badge "${badgeInfo ? badgeInfo.badgeName : ""}" baixado!`)
+
+      validateToken()
     } catch {
-      notify("Erro", "Falha ao baixar o badge", "destructive");
+      notify("Erro", "Falha ao baixar o badge", "destructive")
     } finally {
-      setIsDownloading(false);
+      setIsDownloading(false)
     }
-  };
-
-const exportToJson = () => {
-  if (!badgeInfo) {
-    notify("Erro", "Nenhum badge validado para exportar", "destructive")
-    return
   }
+
+  const exportToJson = () => {
+    if (!badgeInfo) {
+      notify("Erro", "Nenhum badge validado para exportar", "destructive")
+      return
+    }
 
     const json = {
       badge: {
@@ -168,285 +167,397 @@ const exportToJson = () => {
         assignmentId: badgeInfo.assignmentId,
         exportedAt: new Date().toISOString(),
       },
-    };
+    }
 
-   setJsonPreview(JSON.stringify(json, null, 2));
-    setOpenJsonModal(true);
-  };
+    const jsonString = JSON.stringify(json, null, 2)
+    const blob = new Blob([jsonString], { type: "application/json" })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+
+    const sanitizedName = badgeInfo.badgeName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+
+    a.download = `badge-${sanitizedName}-${Date.now()}.json`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+
+    notify("📄 JSON Exportado!", `Dados do badge "${badgeInfo.badgeName}" exportados com sucesso!`)
+  }
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(token);
-    notify("Copiado!", "Código copiado para a área de transferência");
-  };
+    navigator.clipboard.writeText(token)
+    notify("Copiado!", "Código copiado para a área de transferência")
+  }
 
   const resetForm = () => {
-    setToken("");
-    setBadgeInfo(null);
-  };
-  
+    setToken("")
+    setBadgeInfo(null)
+    setIsValidToken(false)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-              <Award className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gray-900/10 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/10 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gray-800/10 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Header */}
+      <div className="relative bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-200/50">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl">
+                  <Award className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Download de Badge</h1>
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Insira seu código para validar e baixar
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Download de Badge</h1>
-              <p className="text-sm text-gray-600">Insira seu código para baixar</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-           
-            <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button
-      className="bg-white border border-gray-300 shadow-sm w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
-    >
-      <MoreVertical className="h-4 w-4 text-gray-700" />
-    </Button>
-  </DropdownMenuTrigger>
-
-  <DropdownMenuContent
-  align="center"        
-  side="top"
-  sideOffset={10}    
-  className="bg-white border border-gray-100 rounded-md shadow-md p-0 overflow-visible" 
->
-  <DropdownMenuArrow
-    className="fill-white stroke-gray-300"  
-    offset={0}  // 
-  />
-
-    <DropdownMenuItem
-      onClick={exportToJson}
-      disabled={!badgeInfo}
-      className="px-4 py-2 text-sm text-gray-700 cursor-pointer data-[highlighted]:text-white"
-    >
-      Export JSON
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-
-
-
-            <Link href="/">
-  <Button className="bg-black text-white hover:bg-gray-900 size-sm">
-    <Home className="h-4 w-4 mr-2" />
-    Voltar ao Sistema
-  </Button>
-</Link>
-
-          </div>
-        </div>
-      </div>
-
-<div className="flex flex-col lg:flex-row gap-8 lg:gap-10 px-4 sm:px-8 py-12">
-
-  {/* Form - metade esquerda no desktop */}
-  <Card className="w-full lg:w-1/2 min-h-[600px] shadow-lg">
-    <CardHeader className="bg-black text-white rounded-t-lg p-8 sm:p-12">
-      <CardTitle className="flex items-center gap-5 text-2xl sm:text-3xl">
-        <Key className="h-6 w-6 sm:h-8 sm:w-8" /> Inserir Código
-      </CardTitle>
-      <CardDescription className="text-blue-100 text-base sm:text-lg">
-        Digite o código que você recebeu por email
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-8 sm:p-12 space-y-6 sm:space-y-8">
-      <div className="space-y-4 sm:space-y-5">
-        <Label htmlFor="token" className="text-base sm:text-lg font-medium">
-          Código de Download
-        </Label>
-        <div className="relative">
-          <Input
-            id="token"
-            type="text"
-            placeholder="550e8400-e29b..."
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && validateToken()}
-            className="font-mono text-lg sm:text-xl pr-14 sm:pr-16"
-          />
-          {token && (
-           <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-3 top-1 h-8 w-8 sm:h-8 sm:w-8 p-0 bg-white border border-gray-200 hover:bg-gray-100"
-              onClick={copyToClipboard}
-            >
-              <Copy className="h-6 w-6 sm:h-7 sm:w-7 " />
-           </Button>
-
-          )}
-        </div>
-        <p className="text-sm sm:text-base text-gray-500">
-          Cole o código UUID que você recebeu por email
-        </p>
-      </div>
-      <div className="flex gap-4 sm:gap-6">
-        <Button
-          onClick={validateToken}
-          disabled={isValidating || !token.trim()}
-          className="flex-1 py-4 sm:py-5 text-lg sm:text-xl
-          bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
-        >
-          {isValidating ? (
-            <>
-              <Clock className="h-6 w-6 sm:h-7 sm:w-7 mr-4 animate-spin" />
-              Validando...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 mr-4" />
-              Validar Código
-            </>
-          )}
-        </Button>
-        <Button variant="outline" onClick={resetForm} disabled={isValidating} className="py-4 sm:py-5 text-lg sm:text-xl ">
-          Limpar
-        </Button>
-      </div>
-    </CardContent>
-  </Card>
-
-  {/* Badge Info - metade direita no desktop */}
-  <Card className="w-full lg:w-1/2 min-h-[600px] shadow-lg">
-    <CardHeader className="p-6 sm:p-8">
-      <CardTitle className="flex items-center gap-4 text-xl sm:text-2xl">
-        <Award className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500" /> Informações
-      </CardTitle>
-      <CardDescription className="text-gray-700 text-base sm:text-lg">
-        {badgeInfo ? "Detalhes do badge" : "Valide o código para ver as informações"}
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="p-8 sm:p-10">
-      {!badgeInfo ? (
-        <div className="text-center py-16 sm:py-20 text-gray-400">
-          <AlertCircle className="h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-6" />
-          <p className="text-lg sm:text-xl">Nenhum código validado</p>
-        </div>
-      ) : (
-        <div className="space-y-6 sm:space-y-8">
-          <div className="p-8 sm:p-10 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border relative overflow-hidden">
-            {badgeInfo.badgeImagePath && (
-              <img
-                src={buildUrl(badgeInfo.badgeImagePath, "badges") ?? "/placeholder.svg"}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover opacity-10"
-              />
-            )}
-            <div className="relative z-10">
-              <h3 className="font-bold text-3xl sm:text-4xl mb-4 sm:mb-5">{badgeInfo.badgeName}</h3>
-              {badgeInfo.badgeCategory && (
-                <Badge variant="secondary" className="text-lg sm:text-xl">{badgeInfo.badgeCategory}</Badge>
-              )}
-              <p className="text-gray-700 text-lg sm:text-lg">{badgeInfo.badgeDescription}</p>
-              {isValidToken && (
-                <div className="flex justify-center mt-6 sm:mt-8">
+            <div className="flex items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
-                    onClick={downloadBadge}
-                    disabled={isDownloading}
-                    size="lg"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-5 sm:py-6 px-8 sm:px-10 text-xl sm:text-2xl"
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11 rounded-xl border-2 hover:border-gray-900 hover:bg-gray-100 transition-all bg-transparent"
                   >
-                    {isDownloading ? (
-                      <>
-                        <Clock className="h-7 w-7 sm:h-8 sm:w-8 mr-4 animate-spin" />
-                        Baixando...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-7 w-7 sm:h-8 sm:w-8 mr-4" />
-                        Baixar Badge
-                      </>
-                    )}
+                    <MoreVertical className="h-5 w-5" />
                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={exportToJson} disabled={!badgeInfo} className="cursor-pointer">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Exportar JSON
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Link href="/">
+                <Button className="bg-black hover:bg-gray-900 text-white shadow-lg hover:shadow-xl rounded-xl px-6 transform transition-all hover:-translate-y-0.5">
+                  <Home className="h-4 w-4 mr-2" />
+                  Voltar ao Sistema
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative container mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+          {/* Form Card */}
+          <Card className="shadow-2xl border-0 overflow-hidden bg-white/95 backdrop-blur-sm transform transition-all hover:shadow-3xl">
+            <CardHeader className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              <div className="relative">
+                <CardTitle className="flex items-center gap-3 text-3xl font-bold mb-2">
+                  <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+                    <Key className="h-7 w-7" />
+                  </div>
+                  Validar Código
+                </CardTitle>
+                <CardDescription className="text-gray-300 text-base">
+                  Digite o código único que você recebeu por email
+                </CardDescription>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-8 space-y-8">
+              <div className="space-y-4">
+                <Label htmlFor="token" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-yellow-500" />
+                  Código de Download
+                </Label>
+                <div className="relative group">
+                  <Input
+                    id="token"
+                    type="text"
+                    placeholder="550e8400-e29b-41d4-a716-446655440000"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && validateToken()}
+                    className="font-mono text-base h-14 pr-14 border-2 border-gray-300 focus:border-black rounded-xl focus:ring-4 focus:ring-gray-200 transition-all"
+                  />
+                  {token && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-2 h-10 w-10 rounded-lg hover:bg-gray-100 transition-all"
+                      onClick={copyToClipboard}
+                    >
+                      <Copy className="h-5 w-5" />
+                    </Button>
+                  )}
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-gray-900 to-black rounded-xl opacity-0 group-hover:opacity-10 blur transition-opacity" />
+                </div>
+                <p className="text-sm text-gray-500 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Cole o código UUID de 36 caracteres recebido por email
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  onClick={validateToken}
+                  disabled={isValidating || !token.trim()}
+                  className="flex-1 h-14 text-lg font-semibold bg-black hover:bg-gray-900 text-white shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-0.5 rounded-xl"
+                >
+                  {isValidating ? (
+                    <>
+                      <Clock className="h-5 w-5 mr-2 animate-spin" />
+                      Validando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      Validar Código
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={resetForm}
+                  disabled={isValidating}
+                  className="h-14 px-6 border-2 border-gray-300 hover:border-black rounded-xl hover:bg-gray-50 bg-transparent transition-all"
+                >
+                  Limpar
+                </Button>
+              </div>
+
+              {/* Success indicator */}
+              {isValidToken && (
+                <div className="flex items-center gap-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl animate-in slide-in-from-top">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-green-900">Código válido!</p>
+                    <p className="text-sm text-green-700">Você pode baixar seu badge agora</p>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-                {/* Emissor */}
-                {badgeInfo.issuer && (
-                  <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building2 className="h-5 w-5 text-blue-600" />
-                      Emitido por
+          {/* Badge Info Card */}
+          <Card className="shadow-2xl border-0 overflow-hidden bg-white/95 backdrop-blur-sm">
+            <CardHeader className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 border-b-2 border-gray-200">
+              <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+                <div className="p-2 bg-yellow-100 rounded-xl shadow-md">
+                  <Award className="h-6 w-6 text-yellow-600" />
+                </div>
+                Informações do Badge
+              </CardTitle>
+              <CardDescription className="text-base text-gray-600">
+                {badgeInfo ? "Detalhes da sua conquista" : "Valide o código para visualizar"}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-8">
+              {!badgeInfo ? (
+                <div className="text-center py-24 space-y-6">
+                  <div className="relative inline-block">
+                    <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center shadow-lg">
+                      <AlertCircle className="h-16 w-16 text-gray-400" />
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-black rounded-full flex items-center justify-center shadow-lg">
+                      <Key className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Aguardando validação</h3>
+                    <p className="text-gray-500">Insira e valide seu código para ver as informações do badge</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Badge Main Info */}
+                  <div className="relative p-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border-2 border-blue-100 overflow-hidden group shadow-lg">
+                    {badgeInfo.badgeImagePath && (
                       <img
-                        src={buildUrl(badgeInfo.issuerImagePath, "issuers") ?? "/placeholder.svg"}
-                        alt={badgeInfo.issuer}
-                        className="w-26 h-16 object-cover rounded-xl"
+                        src={buildUrl(badgeInfo.badgeImagePath, "badges") ?? "/placeholder.svg"}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover opacity-5 group-hover:opacity-10 transition-opacity"
                       />
-                      <h4 className="text-blue-800 font-bold">
+                    )}
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <h3 className="text-3xl font-bold text-gray-900">{badgeInfo.badgeName}</h3>
+                          {badgeInfo.badgeCategory && (
+                            <Badge className="text-base px-4 py-1.5 bg-black hover:bg-gray-900 text-white shadow-md">
+                              {badgeInfo.badgeCategory}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-2 border-yellow-200">
+                          <Award className="h-8 w-8 text-yellow-600" />
+                        </div>
+                      </div>
+                      <p className="text-gray-700 text-base leading-relaxed">{badgeInfo.badgeDescription}</p>
+
+                      {isValidToken && (
+                        <div className="pt-4 space-y-3">
+                          <Button
+                            onClick={downloadBadge}
+                            disabled={isDownloading}
+                            size="lg"
+                            className="w-full h-16 text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-xl hover:shadow-2xl transform transition-all hover:-translate-y-1 rounded-xl"
+                          >
+                            {isDownloading ? (
+                              <>
+                                <Clock className="h-6 w-6 mr-3 animate-spin" />
+                                Baixando...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-6 w-6 mr-3" />
+                                Baixar Badge Agora
+                              </>
+                            )}
+                          </Button>
+
+                          <Link href={`/badge/${badgeInfo.assignmentId}`} target="_blank">
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="w-full h-14 text-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl bg-transparent"
+                            >
+                              <ExternalLink className="h-5 w-5 mr-2" />
+                              Ver Página Pública do Badge
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Issuer Info */}
+                  {badgeInfo.issuer && (
+                    <div className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl border-2 border-slate-200 shadow-md">
+                      <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-600">
+                        <Building2 className="h-5 w-5 text-black" />
+                        Emitido por
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={buildUrl(badgeInfo.issuerImagePath, "issuers") ?? "/placeholder.svg"}
+                          alt={badgeInfo.issuer}
+                          className="w-20 h-20 object-cover rounded-xl shadow-lg border-2 border-white"
+                        />
                         <a
                           href="https://incode-tech-school.com.br/"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline"
+                          className="text-xl font-bold text-gray-900 hover:text-black transition-colors hover:underline"
                         >
                           {badgeInfo.issuer}
                         </a>
-                      </h4>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Details Grid */}
+                  <div className="grid gap-4">
+                    <DetailCard
+                      icon={<User className="h-5 w-5" />}
+                      label="Conquistado por"
+                      value={badgeInfo.studentName}
+                      gradient="from-gray-800 to-black"
+                    />
+                    <DetailCard
+                      icon={<Calendar className="h-5 w-5" />}
+                      label="Data de emissão"
+                      value={formatDate(badgeInfo.assignedAt)}
+                      gradient="from-gray-700 to-gray-900"
+                    />
+                    <DetailCard
+                      icon={<Download className="h-5 w-5" />}
+                      label="Total de downloads"
+                      value={`${badgeInfo.downloadCount} vez(es)`}
+                      gradient="from-gray-600 to-gray-800"
+                    />
+                  </div>
+
+                  {/* Token Status */}
+                  <div
+                    className={`p-5 rounded-2xl border-2 shadow-md ${
+                      isTokenExpired(badgeInfo.tokenExpiresAt)
+                        ? "bg-red-50 border-red-200"
+                        : "bg-green-50 border-green-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`p-2 rounded-xl ${
+                          isTokenExpired(badgeInfo.tokenExpiresAt) ? "bg-red-100" : "bg-green-100"
+                        }`}
+                      >
+                        <Shield
+                          className={`h-5 w-5 ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "text-red-600" : "text-green-600"}`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">Validade do Token</p>
+                        <p
+                          className={`text-sm ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "text-red-700" : "text-green-700"}`}
+                        >
+                          {isTokenExpired(badgeInfo.tokenExpiresAt) ? "Expirado em: " : "Válido até: "}
+                          {formatDate(badgeInfo.tokenExpiresAt)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                )}
-
-                {/* Outros detalhes */}
-               <div className="space-y-3">
-                <div className="hover:text-blue-600 cursor-pointer">
-                  <Detail icon={<User />} label="Conquistado por" value={badgeInfo.studentName} />
                 </div>
-
-                <div className="hover:text-[#8A2BE2] cursor-pointer">
-                  <Detail icon={<Calendar />} label="Data" value={formatDate(badgeInfo.assignedAt)} />
-                </div>
-
-                <div className="hover:text-[#8A2BE2] cursor-pointer">
-                  <Detail icon={<Download />} label="Downloads" value={`${badgeInfo.downloadCount}`} />
-                </div>
-
-               </div>
-                {/* Status */}
-                <div
-                  className={`p-4 rounded-xl border ${isTokenExpired(badgeInfo.tokenExpiresAt) ? "bg-red-50" : "bg-green-50"}`}
-                >
-                  <p>
-                    <strong>Válido até:</strong> {formatDate(badgeInfo.tokenExpiresAt)}
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
 }
 
-function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function DetailCard({
+  icon,
+  label,
+  value,
+  gradient,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  gradient: string
+}) {
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-      <div className="text-gray-500">{icon}</div>
-      <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-gray-900">{value}</p>
+    <div className="group relative overflow-hidden rounded-xl bg-white border-2 border-gray-200 hover:border-gray-300 transition-all hover:shadow-lg">
+      <div className="flex items-center gap-4 p-4">
+        <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg`}>{icon}</div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-600 mb-1">{label}</p>
+          <p className="text-lg font-bold text-gray-900">{value}</p>
+        </div>
       </div>
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
+      />
     </div>
   )
 }
-function setJsonPreview(jsonString: string) {
-  throw new Error("Function not implemented.sacana")
-}
-
-function setOpenJsonModal(arg0: boolean) {
-  throw new Error("Function not implemented.")
-}
-
-
