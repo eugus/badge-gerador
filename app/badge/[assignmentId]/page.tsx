@@ -118,33 +118,33 @@ const buildIssuerUrl = (path: string | undefined) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <nav className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
+      <header className="relative bg-white/90 backdrop-blur-md shadow-lg pr-[500px] border-b border-gray-200/50">
+        <div className="max-w-6xl mx-auto  py-4">
+          <nav className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <Link href="/"  className=" flex items-center text-xl  hover:text-blue-600 transition-colors">
               Backpack
+              <ChevronRight className="h-4 w-4 mt-[4px] ml-1" />
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            
             <span className="text-gray-900 font-medium">{badgeData.badgeName}</span>
           </nav>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto mt-10  pb-6 bg-white/90 rounded-lg shadow-2xl">
         {/* Title and Actions */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
+        <div className="h-36 pt-6 flex flex-col px-7 rounded-t-lg bg-gray-950 md:flex-row md:items-start md:justify-between gap-6 mb-8 ">
           <div className="flex-1">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">{badgeData.badgeName}</h1>
-            <p className="text-xl text-gray-600 mb-4">Awarded to {badgeData.studentEmail}</p>
+            <p className="text-xl font-bold text-white mb-4">Awarded to {badgeData.studentEmail}</p>
             <div className="flex items-center gap-3">
               <Link
                 href={`/profile/${assignmentId}`}
                 target="_blank"
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
-              >
+                className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-700 font-medium">
                 View public page
                 <ExternalLink className="h-4 w-4" />
               </Link>
@@ -155,12 +155,12 @@ const buildIssuerUrl = (path: string | undefined) => {
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" size="lg" className="gap-2 bg-transparent">
+          <div className="flex gap-3 pt-7">
+            <Button variant="outline" size="lg" className="gap-2 text-gray-50 bg-transparent bg-gray-900">
               <Download className="h-5 w-5" />
               Download
             </Button>
-            <Button onClick={handleShare} size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleShare} size="lg" className="gap-2 bg-transparent bg-blue-600 hover:bg-blue-700">
               <Share2 className="h-5 w-5" />
               Share
             </Button>
@@ -168,12 +168,12 @@ const buildIssuerUrl = (path: string | undefined) => {
         </div>
 
         {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 px-7">
           {/* Left Column - Badge Image */}
           <div className="lg:col-span-1">
             <Card className="overflow-hidden shadow-lg border-2">
               <CardContent className="p-0">
-                <div className="aspect-square bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+                <div className="aspect-square bg-gradient-to-br from-blue-50  flex items-center justify-center">
                   <img
   src={`${process.env.NEXT_PUBLIC_API_URL}/api/public/assertions/badges/${badgeData.id}/image`}
   alt={badgeData.badgeImagePath}
@@ -188,8 +188,8 @@ const buildIssuerUrl = (path: string | undefined) => {
           <div className="lg:col-span-2 space-y-8">
             {/* Offered By */}
             <Card className="shadow-md border-2">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">Offered by</h2>
+              <CardContent className="p-6 bg-transparent hover:bg-gray-200">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 ">Offered by</h2>
                 <div className="flex items-center gap-4">
                   <img
   src={buildUrl(1, "issuers")}
@@ -200,7 +200,7 @@ const buildIssuerUrl = (path: string | undefined) => {
                     href={badgeData.issuerUrl || "https://incode-tech-school.com.br/"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-semibold text-lg flex items-center gap-2"
+                    className="text-blue-600 hover:text-blue-700 font-semibold text-lg flex items-center gap-2 hover:underline"
                   >
                     {badgeData.issuer}
                     <ExternalLink className="h-4 w-4" />
@@ -211,16 +211,16 @@ const buildIssuerUrl = (path: string | undefined) => {
 
             {/* Issued On */}
             <Card className="shadow-md border-2">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-700 mb-2">Issued on</h2>
+              <CardContent className="p-6 hover:bg-gray-200">
+                <h2 className="text-lg font-bold  text-gray-900 mb-2">Issued on</h2>
                 <p className="text-gray-900 text-lg">{formatDate(badgeData.assignedAt)}</p>
               </CardContent>
             </Card>
 
             {/* Description */}
-            <Card className="shadow-md border-2">
+            <Card className="shadow-md border-2 hover:bg-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-700 mb-3">Description</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-3">Description</h2>
                 <p className="text-gray-700 leading-relaxed">{badgeData.badgeDescription}</p>
                 {badgeData.achievementReason && (
                   <>
@@ -238,7 +238,7 @@ const buildIssuerUrl = (path: string | undefined) => {
             {badgeData.criteria && badgeData.criteria.length > 0 && (
               <Card className="shadow-md border-2">
                 <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4">Earning criteria</h2>
+                  <h2 className="text-lg font-bold text-gray-700 mb-4">Earning criteria</h2>
                   <div className="space-y-3">
                     {badgeData.criteria.map((criterion, index) => (
                       <div key={index} className="flex items-start gap-3">
@@ -254,8 +254,8 @@ const buildIssuerUrl = (path: string | undefined) => {
             )}
 
             {/* Recipient Info */}
-            <Card className="shadow-md border-2 bg-gradient-to-br from-slate-50 to-blue-50">
-              <CardContent className="p-6">
+            <Card className="shadow-md border-2 bg-gradient-to-br from-slate-50 to-blue-50 ">
+              <CardContent className="p-6 bg-transparent hover:bg-gray-200">
                 <h2 className="text-lg font-semibold text-gray-700 mb-4">Badge Recipient</h2>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
@@ -264,7 +264,7 @@ const buildIssuerUrl = (path: string | undefined) => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Name</p>
-                      <p className="font-semibold text-gray-900">{badgeData.studentName}</p>
+                      <p className="font-semibold text-gray-900">Mãe de Gustavo</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -284,11 +284,7 @@ const buildIssuerUrl = (path: string | undefined) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 mt-16 py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center text-gray-600">
-          <p>© 2025 Badge System. All rights reserved.</p>
-        </div>
-      </footer>
+
     </div>
   )
 }
