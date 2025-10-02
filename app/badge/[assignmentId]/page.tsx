@@ -54,6 +54,36 @@ export default function PublicBadgePage() {
     }
   }
 
+  const handleDownload = async () => {
+  if (!assignmentId) return;
+
+  try {
+    const response = await fetch(`http://localhost:8080/api/badges/download/${assignmentId}`);
+    if (!response.ok) throw new Error("Erro ao baixar");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+
+    // Pega o filename do Content-Disposition do backend
+    const disposition = response.headers.get("Content-Disposition");
+    let filename = "badge.png";
+    if (disposition && disposition.includes("filename=")) {
+      filename = disposition.split("filename=")[1].replace(/"/g, "");
+    }
+
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 const buildUrl = (id: number | string | undefined, type: "badges" | "issuers") => {
   if (!id) return "/placeholder.svg" // fallback
   console.log("Building URL for", type, id)
@@ -156,10 +186,15 @@ const buildIssuerUrl = (path: string | undefined) => {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" size="lg" className="gap-2 bg-transparent">
-              <Download className="h-5 w-5" />
-              Download
-            </Button>
+           <Button
+  variant="outline"
+  size="lg"
+  className="gap-2 bg-transparent"
+  onClick={handleDownload} // chama a função de download
+>
+  <Download className="h-5 w-5" />
+  Download
+</Button>
             <Button onClick={handleShare} size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700">
               <Share2 className="h-5 w-5" />
               Share
