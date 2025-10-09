@@ -120,7 +120,7 @@ const buildIssuerUrl = (path: string | undefined) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ">
       {/* Header */}
-      <header className="relative bg-white/90 backdrop-blur-md shadow-lg pr-[500px] border-b border-gray-200/50">
+      <header className="relative bg-white/90 backdrop-blur-md shadow-lg  border-b border-gray-200/50">
         <div className="max-w-6xl mx-auto  py-4">
           <nav className="flex items-center gap-2 text-sm text-gray-600 mb-2">
             <Link href="/"  className=" flex items-center text-xl  hover:text-blue-600 transition-colors">
@@ -132,156 +132,177 @@ const buildIssuerUrl = (path: string | undefined) => {
           </nav>
         </div>
       </header>
+<main className="max-w-5xl mx-auto   sm: bg-white/90 rounded-2xl shadow-xl mt-4 mb-6 overflow-hidden"
+  style={{ height: "85vh" }}
+>
+  {/* Title and Actions */}
+  <div className="  pt-3 flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4 bg-gray-950 text-white rounded-t-2xl p-4" style={{ width: "200vh" }}>
+    <div className="flex-1">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-100 mb-1">
+        {badgeData.badgeName}
+      </h1>
+      <p className="text-sm sm:text-base font-semibold text-gray-200 mb-2">
+        Awarded to {badgeData.studentEmail}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href={`/profile/${assignmentId}`}
+          target="_blank"
+          className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-600 font-medium text-sm"
+        >
+          View public page
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+        <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+          <div className="w-2 h-2 bg-green-500 rounded-full" />
+          Public
+        </Badge>
+      </div>
+    </div>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto mt-10  pb-6 bg-white/90 rounded-lg shadow-2xl">
-        {/* Title and Actions */}
-        <div className="h-36 pt-6 flex flex-col px-7 rounded-t-lg bg-gray-950 md:flex-row md:items-start md:justify-between gap-6 mb-8 ">
-          <div className="flex-1">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">{badgeData.badgeName}</h1>
-            <p className="text-xl font-bold text-white mb-4">Awarded to {badgeData.studentEmail}</p>
-            <div className="flex items-center gap-3">
-              <Link
-                href={`/profile/${assignmentId}`}
-                target="_blank"
-                className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-700 font-medium">
-                View public page
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                Public
-              </Badge>
+    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2 text-gray-50 bg-gray-900 w-full sm:w-auto text-xs"
+      >
+        <Download className="h-4 w-4" />
+        Download
+      </Button>
+      <Button
+        onClick={handleShare}
+        size="sm"
+        className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-xs"
+      >
+        <Share2 className="h-4 w-4" />
+        Share
+      </Button>
+    </div>
+  </div>
+
+  {/* Main Grid */}
+  <div className="px-10 grid grid-cols-1 lg:grid-cols-3 gap-4 px-3 sm:px-5 pb-4"
+    style={{ height: "calc(90vh - 130px)", overflow: "hidden" }}
+  >
+    {/* Left Column - Badge Image */}
+    <div className="lg:col-span-1 flex items-center justify-center">
+      <Card className="overflow-hidden shadow-md border w-full max-w-xs mx-auto">
+        <CardContent className="p-0">
+          <div className="aspect-square bg-gradient-to-br from-blue-50 flex items-center justify-center">
+            <img
+              src={`${process.env.NEXT_PUBLIC_API_URL}/api/public/assertions/badges/${badgeData.id}/image`}
+              alt={badgeData.badgeImagePath}
+              className="w-full h-full object-contain p-6 sm:p-8"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    {/* Right Column - Information */}
+    <div className="lg:col-span-2 space-y-3 overflow-y-auto pr-1"
+      style={{ maxHeight: "calc(90vh - 140px)" }}
+    >
+      {/* Offered By */}
+      <Card className="shadow-sm border">
+        <CardContent className="p-4">
+          <h2 className="text-base font-bold text-gray-900 mb-2">Offered by</h2>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left">
+            <img
+              src={buildUrl(1, "issuers")}
+              alt="INCODE TECH SCHOOL"
+              className="w-12 h-12 object-contain rounded-lg border"
+            />
+            <a
+              href={badgeData.issuerUrl || "https://incode-tech-school.com.br/"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-2 hover:underline"
+            >
+              {badgeData.issuer}
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Issued On */}
+      <Card className="shadow-sm border">
+        <CardContent className="p-4">
+          <h2 className="text-base font-bold text-gray-900 mb-1">Issued on</h2>
+          <p className="text-gray-900 text-sm">{formatDate(badgeData.assignedAt)}</p>
+        </CardContent>
+      </Card>
+
+      {/* Description */}
+      <Card className="shadow-sm border">
+        <CardContent className="p-4">
+          <h2 className="text-base font-bold text-gray-900 mb-2">Description</h2>
+          <p className="text-gray-700 text-sm leading-relaxed">{badgeData.badgeDescription}</p>
+          {badgeData.achievementReason && (
+            <>
+              <Separator className="my-3" />
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-3 rounded">
+                <p className="text-sm font-medium text-blue-900 mb-1">Achievement Reason</p>
+                <p className="text-blue-800 text-sm">{badgeData.achievementReason}</p>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Earning Criteria */}
+      {badgeData.criteria && badgeData.criteria.length > 0 && (
+        <Card className="shadow-sm border">
+          <CardContent className="p-4">
+            <h2 className="text-base font-bold text-gray-700 mb-2">Earning criteria</h2>
+            <div className="space-y-1">
+              {badgeData.criteria.map((criterion, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-1" />
+                  <p className="text-gray-700 text-sm flex-1">{criterion}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recipient Info */}
+      <Card className="shadow-sm border bg-gradient-to-br from-slate-50 to-blue-50">
+        <CardContent className="p-4">
+          <h2 className="text-base font-semibold text-gray-700 mb-2">
+            Badge Recipient
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="flex items-start gap-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Name</p>
+                <p className="font-semibold text-gray-900 text-sm sm:text-base">
+                  Mãe de Gustavo
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Calendar className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Awarded on</p>
+                <p className="font-semibold text-gray-900 text-sm sm:text-base">
+                  {formatDate(badgeData.assignedAt)}
+                </p>
+              </div>
             </div>
           </div>
-
-          <div className="flex gap-3 pt-7">
-            <Button variant="outline" size="lg" className="gap-2 text-gray-50 bg-transparent bg-gray-900">
-              <Download className="h-5 w-5" />
-              Download
-            </Button>
-            <Button onClick={handleShare} size="lg" className="gap-2 bg-transparent bg-blue-600 hover:bg-blue-700">
-              <Share2 className="h-5 w-5" />
-              Share
-            </Button>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 px-7">
-          {/* Left Column - Badge Image */}
-          <div className="lg:col-span-1">
-            <Card className="overflow-hidden shadow-lg border-2">
-              <CardContent className="p-0">
-                <div className="aspect-square bg-gradient-to-br from-blue-50  flex items-center justify-center">
-                  <img
-  src={`${process.env.NEXT_PUBLIC_API_URL}/api/public/assertions/badges/${badgeData.id}/image`}
-  alt={badgeData.badgeImagePath}
-  className="w-full h-full object-contain p-8"
-/>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Information */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Offered By */}
-            <Card className="shadow-md border-2">
-              <CardContent className="p-6 bg-transparent hover:bg-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 ">Offered by</h2>
-                <div className="flex items-center gap-4">
-                  <img
-  src={buildUrl(1, "issuers")}
-  alt="INCODE TECH SCHOOL"
-  className="w-16 h-16 object-contain rounded-lg border"
-/>
-                  <a
-                    href={badgeData.issuerUrl || "https://incode-tech-school.com.br/"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-semibold text-lg flex items-center gap-2 hover:underline"
-                  >
-                    {badgeData.issuer}
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Issued On */}
-            <Card className="shadow-md border-2">
-              <CardContent className="p-6 hover:bg-gray-200">
-                <h2 className="text-lg font-bold  text-gray-900 mb-2">Issued on</h2>
-                <p className="text-gray-900 text-lg">{formatDate(badgeData.assignedAt)}</p>
-              </CardContent>
-            </Card>
-
-            {/* Description */}
-            <Card className="shadow-md border-2 hover:bg-gray-200">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Description</h2>
-                <p className="text-gray-700 leading-relaxed">{badgeData.badgeDescription}</p>
-                {badgeData.achievementReason && (
-                  <>
-                    <Separator className="my-4" />
-                    <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded">
-                      <p className="text-sm font-medium text-blue-900 mb-1">Achievement Reason</p>
-                      <p className="text-blue-800">{badgeData.achievementReason}</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Earning Criteria */}
-            {badgeData.criteria && badgeData.criteria.length > 0 && (
-              <Card className="shadow-md border-2">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-bold text-gray-700 mb-4">Earning criteria</h2>
-                  <div className="space-y-3">
-                    {badgeData.criteria.map((criterion, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div className="mt-1">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </div>
-                        <p className="text-gray-700 flex-1">{criterion}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Recipient Info */}
-            <Card className="shadow-md border-2 bg-gradient-to-br from-slate-50 to-blue-50 ">
-              <CardContent className="p-6 bg-transparent hover:bg-gray-200">
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">Badge Recipient</h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <User className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Name</p>
-                      <p className="font-semibold text-gray-900">Mãe de Gustavo</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Calendar className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Awarded on</p>
-                      <p className="font-semibold text-gray-900">{formatDate(badgeData.assignedAt)}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</main>
 
       {/* Footer */}
 
